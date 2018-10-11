@@ -7,7 +7,7 @@ let Adafruit_SSD1306 = {
   _close: ffi('void mgos_ssd1306_close(void *)'),
   _begin: ffi('void mgos_ssd1306_begin(void *, int, int, int)'),
   _cmd: ffi('void mgos_ssd1306_command(void *, int)'),
-  _cd: ffi('void mgos_ssd1306_clear_display(void *)'),
+  _cdx: ffi('void mgos_ssd1306_clear_display(void *)'),
   _id: ffi('void mgos_ssd1306_invert_display(void *, int)'),
   _d: ffi('void mgos_ssd1306_display(void *)'),
   _ssr: ffi('void mgos_ssd1306_start_scroll_right(void *, int, int)'),
