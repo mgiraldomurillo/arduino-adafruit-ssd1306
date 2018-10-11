@@ -447,7 +447,95 @@ void Adafruit_SSD1306::dim(boolean dim) {
   ssd1306_command(contrast);
 }
 
+void Adafruit_SSD1306::ssd1306_data(uint8_t c) {
+  if (sid != -1)
+  {
+    // SPI
+    //digitalWrite(cs, HIGH);
+    *csport |= cspinmask;
+    //digitalWrite(dc, HIGH);
+    *dcport |= dcpinmask;
+    //digitalWrite(cs, LOW);
+    *csport &= ~cspinmask;
+    fastSPIwrite(c);
+    //digitalWrite(cs, HIGH);
+    *csport |= cspinmask;
+  }
+  else
+  {
+    // I2C
+    uint8_t control = 0x40;   // Co = 0, D/C = 1
+    Wire.beginTransmission(_i2caddr);
+    WIRE_WRITE(control);
+    WIRE_WRITE(c);
+    Wire.endTransmission();
+  }
+}
+
 void Adafruit_SSD1306::display(void) {
+  if (sid != -1)
+  {
+
+  	for (int8_t i = (SSD1306_LCDHEIGHT/8)-1; i >= 0; i--)
+  	{
+      ssd1306_command(0xB0 + i);		// Set row
+      ssd1306_command(SSD1306_SETLOWCOLUMN);		// Set lower column address
+      ssd1306_command(SSD1306_SETHIGHCOLUMN); // Set higher column address
+      
+      // SPI
+      *csport |= cspinmask;
+      *dcport |= dcpinmask;
+      *csport &= ~cspinmask;
+    
+      for (uint16_t j = SSD1306_LCDWIDTH; j > 0; j--)
+      {
+  		  fastSPIwrite(buffer[i*SSD1306_LCDWIDTH+SSD1306_LCDWIDTH-j]);
+      }
+      
+      *csport |= cspinmask;
+  	}
+  }
+  else
+  {
+    // save I2C bitrate
+#ifndef ESP32
+#ifndef __SAM3X8E__
+    uint8_t twbrbackup = TWBR;
+    TWBR = 12; // upgrade to 400KHz!
+#endif
+#endif
+    //Serial.println(TWBR, DEC);
+    //Serial.println(TWSR & 0x3, DEC);
+
+    // I2C
+  	for (int8_t i = (SSD1306_LCDHEIGHT/8)-1; i >= 0; i--)
+  	{
+      ssd1306_command(0xB0 + i);		// Set row
+      ssd1306_command(SSD1306_SETLOWCOLUMN);		// Set lower column address
+      ssd1306_command(SSD1306_SETHIGHCOLUMN); // Set higher column address
+      
+      for (uint16_t j = SSD1306_LCDWIDTH; j > 0; j--)
+      {
+        // send a bunch of data in one xmission
+        Wire.beginTransmission(_i2caddr);
+        WIRE_WRITE(0x40);
+        for (uint8_t x=0; x<16; x++) {
+          WIRE_WRITE(buffer[i*SSD1306_LCDWIDTH+SSD1306_LCDWIDTH-j]);
+          j--;
+        }
+        j++;
+        Wire.endTransmission();
+      }
+    }
+#ifndef ESP32
+#ifndef __SAM3X8E__
+    TWBR = twbrbackup;
+#endif
+#endif
+  }
+}
+
+/*void Adafruit_SSD1306::display(void) {
   ssd1306_command(SSD1306_COLUMNADDR);
   ssd1306_command(0);   // Column start address (0 = reset)
   ssd1306_command(WIDTH-1); // Column end address (127 = reset)
@@ -513,7 +601,7 @@ void Adafruit_SSD1306::display(void) {
     TWBR = twbrbackup;
 #endif
   }
-}
+}*/
 
 // clear everything
 void Adafruit_SSD1306::clearDisplay(void) {
