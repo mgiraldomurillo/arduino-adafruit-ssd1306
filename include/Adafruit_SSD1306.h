@@ -151,12 +151,12 @@ class Adafruit_SSD1306 : public Adafruit_GFX {
   void invertDisplay(uint8_t i);
   void display();
 
-  /*void startscrollright(uint8_t start, uint8_t stop);
+  void startscrollright(uint8_t start, uint8_t stop);
   void startscrollleft(uint8_t start, uint8_t stop);
 
   void startscrolldiagright(uint8_t start, uint8_t stop);
   void startscrolldiagleft(uint8_t start, uint8_t stop);
-  void stopscroll(void);*/
+  void stopscroll(void);
 
   void dim(boolean dim);
 
